@@ -5,10 +5,12 @@ import java.util.ArrayList;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
 
 import com.project.management.project_management.domain.model.User;
 import com.project.management.project_management.domain.port.out.UserRepositoryPort;
 
+@Service
 public class CustomUserDetailsService implements UserDetailsService {
 
     private final UserRepositoryPort userRepositoryPort;

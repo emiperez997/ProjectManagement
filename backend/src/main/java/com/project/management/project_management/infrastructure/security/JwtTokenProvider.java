@@ -35,9 +35,9 @@ public class JwtTokenProvider {
         Date expiryDate = new Date(System.currentTimeMillis() + expirationTime);
 
         return Jwts.builder()
-                .subject(userDetails.getUsername())
-                .issuedAt(new Date())
-                .expiration(expiryDate)
+                .setSubject(userDetails.getUsername())
+                .setIssuedAt(new Date())
+                .setExpiration(expiryDate)
                 .signWith(getSecretKey())
                 .compact();
     }
@@ -46,27 +46,28 @@ public class JwtTokenProvider {
         Date expiryDate = new Date(System.currentTimeMillis() + expirationTime);
 
         return Jwts.builder()
-                .subject(username)
-                .issuedAt(new Date())
-                .expiration(expiryDate)
+                .setSubject(username)
+                .setIssuedAt(new Date())
+                .setExpiration(expiryDate)
                 .signWith(getSecretKey())
                 .compact();
     }
 
     public String getUsernameFromToken(String token) {
-        return Jwts.parser()
-                .verifyWith(getSecretKey())
+        return Jwts.parserBuilder()
+                .setSigningKey(getSecretKey())
                 .build()
-                .parseSignedClaims(token)
-                .getPayload()
+                .parseClaimsJws(token)
+                .getBody()
                 .getSubject();
     }
 
     public boolean validateToken(String token) {
         try {
-            Jwts.parser().verifyWith(getSecretKey())
+            Jwts.parserBuilder()
+                    .setSigningKey(getSecretKey())
                     .build()
-                    .parseSignedClaims(token);
+                    .parseClaimsJws(token);
 
             return true;
         } catch (SignatureException ex) {
