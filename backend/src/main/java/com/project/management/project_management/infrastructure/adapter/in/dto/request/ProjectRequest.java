@@ -11,16 +11,16 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProjectRequest {
-  @NotBlank(message = "El nombre del proyecto es obligatorio")
-  private String name;
 
-  private String description;
-  private String status;
-  private LocalDateTime startDate;
-  private LocalDateTime endDate;
+    @NotBlank(message = "El nombre del proyecto es obligatorio")
+    private String name;
 
-  public ProjectRequest(String name, String description) {
-    this.name = name;
-    this.description = description;
-  }
+    private String description;
+    private LocalDateTime startDate;
+    private LocalDateTime endDate;
+
+    public ProjectRequest(String name, String description) {
+        this.name = name;
+        this.description = description;
+    }
 }

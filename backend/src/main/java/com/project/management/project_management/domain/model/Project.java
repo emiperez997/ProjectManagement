@@ -1,6 +1,7 @@
 package com.project.management.project_management.domain.model;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import lombok.AllArgsConstructor;
@@ -21,8 +22,8 @@ public class Project {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private User owner;
-    private List<User> members;
-    private List<Task> tasks;
+    private List<User> members = new ArrayList<>();
+    private List<Task> tasks = new ArrayList<>();
 
     public Project(String name, String description, User owner) {
         this.name = name;
@@ -35,5 +36,13 @@ public class Project {
 
     public enum ProjectStatus {
         PLANNING, ACTIVE, ON_HOLD, COMPLETED, CANCELLED
+    }
+
+    public int getTotalTasks() {
+        return tasks != null ? tasks.size() : 0;
+    }
+
+    public int getCompletedTasks() {
+        return (int) tasks.stream().filter(Task::isCompleted).count();
     }
 }

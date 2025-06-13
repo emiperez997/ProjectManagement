@@ -34,6 +34,10 @@ public class Task {
         this.createdBy = createdBy;
     }
 
+    public boolean isCompleted() {
+        return this.status == TaskStatus.DONE;
+    }
+
     public enum TaskStatus {
         TODO, IN_PROGRESS, IN_REVIEW, DONE
     }

@@ -53,7 +53,6 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
         try {
-            System.out.println("Login attempt for user: " + loginRequest.getUsername());
             String token = authUseCase.login(loginRequest.getUsername(), loginRequest.getPassword());
 
             // // Obtener información del usuario autenticado
@@ -72,7 +71,9 @@ public class AuthController {
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser() {
         try {
+            System.out.println("Current user: ");
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
             String username = authentication.getName();
 
             return ResponseEntity.ok(new UserResponse(

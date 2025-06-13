@@ -8,7 +8,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionException;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import jakarta.servlet.FilterChain;
@@ -21,48 +23,49 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider tokenProvider;
     private final CustomUserDetailsService userDetailsService;
+    private final PlatformTransactionManager transactionManager;
 
-    public JwtAuthenticationFilter(JwtTokenProvider tokenProvider, CustomUserDetailsService userDetailsService) {
+    public JwtAuthenticationFilter(JwtTokenProvider tokenProvider, CustomUserDetailsService userDetailsService, PlatformTransactionManager transactionManager) {
         this.tokenProvider = tokenProvider;
         this.userDetailsService = userDetailsService;
+        this.transactionManager = transactionManager;
     }
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
 
-        String path = request.getRequestURI();
+        String authHeader = request.getHeader("Authorization");
+        String jwt;
+        String username;
 
-        // Saltar el filtro JWT para rutas de autenticación
-        if (path.startsWith("/api/auth/")) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        try {
-            String jwt = getJwtFromRequest(request);
+        jwt = authHeader.substring(7);
+        username = tokenProvider.getUsernameFromToken(jwt);
 
-            if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
-                String username = tokenProvider.getUsernameFromToken(jwt);
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                UsernamePasswordAuthenticationToken authentication
-                        = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            try {
+                // Ejecutar la carga del usuario dentro de una transacción
+                TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
+                UserDetails userDetails = transactionTemplate.execute(status -> {
+                    return userDetailsService.loadUserByUsername(username);
+                });
+
+                if (tokenProvider.validateToken(jwt) && userDetails != null) {
+                    UsernamePasswordAuthenticationToken authToken
+                            = new UsernamePasswordAuthenticationToken(
+                                    userDetails, null, userDetails.getAuthorities());
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
+            } catch (TransactionException e) {
+                logger.error("Error durante la autenticación JWT", e);
             }
-        } catch (RuntimeException ex) {
-            logger.error("Error inesperado durante la autenticación JWT", ex);
         }
-
         filterChain.doFilter(request, response);
     }
 
-    private String getJwtFromRequest(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authorization");
-
-        System.out.println("Authorization header: " + bearerToken);
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
-        }
-        return null;
-    }
 }

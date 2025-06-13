@@ -8,19 +8,30 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserResponse {
-  private Long id;
-  private String username;
-  private String email;
-  private String firstName;
-  private String lastName;
-  private String fullName;
 
-  public UserResponse(Long id, String username, String email, String firstName, String lastName) {
-    this.id = id;
-    this.username = username;
-    this.email = email;
-    this.firstName = firstName;
-    this.lastName = lastName;
-    this.fullName = firstName + " " + lastName;
-  }
+    private Long id;
+    private String username;
+    private String email;
+    private String firstName;
+    private String lastName;
+    private String fullName;
+
+    public UserResponse(Long id, String username, String email, String firstName, String lastName) {
+        this.id = id;
+        this.username = username;
+        this.email = email;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.fullName = firstName + " " + lastName;
+    }
+
+    public static UserResponse fromDomain(com.project.management.project_management.domain.model.User user) {
+        return new UserResponse(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getFirstName(),
+                user.getLastName()
+        );
+    }
 }

@@ -76,4 +76,9 @@ public class UserRepositoryAdapter implements UserRepositoryPort {
         return userJpaRepository.findByIdWithAssignedTasks(id)
                 .map(userMapper::toDomain);
     }
+
+    @Override
+    public boolean existsById(Long id) {
+        return userJpaRepository.existsById(id);
+    }
 }
